@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Additional office",
+    "pattern": "additional",
+    "class": "priority-additional"
+  },
+  {
+    "name": "CIT_A_ITAT_PrCCC",
+    "pattern": "cit\\s*\\(a\\)|cit\\(a\\)|itat|prccc|cit a",
+    "class": "priority-citaitatprccc"
+  },
+  {
+    "name": "CIT Office",
+    "pattern": "cit\\s*office|citoffice",
+    "class": "priority-citoffice"
+  },
+  {
+    "name": "CPC_ITBA_JAO",
+    "pattern": "cpc|itba|jao",
+    "class": "priority-cpcitba"
+  },
+  {
+    "name": "Miscellaneous",
+    "pattern": ".*",
+    "class": "priority-misc"
+  }
+]

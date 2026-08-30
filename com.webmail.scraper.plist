@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.webmail.scraper</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/arvindmeena/Desktop/webmail scrapper/run_webmail_scraper.sh</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>WorkingDirectory</key>
+  <string>/Users/arvindmeena/Desktop/webmail scrapper</string>
+  <key>StandardOutPath</key>
+  <string>/Users/arvindmeena/Desktop/webmail scrapper/logs/out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/arvindmeena/Desktop/webmail scrapper/logs/err.log</string>
+</dict>
+</plist>

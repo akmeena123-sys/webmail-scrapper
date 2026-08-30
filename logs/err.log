@@ -1,0 +1,62 @@
+ * Tip: There are .env or .flaskenv files present. Do "pip install python-dotenv" to use them.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.1.6:8080
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [29/Aug/2026 11:32:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:32:07] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:35:16] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:35:16] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:35:57] "PATCH /api/email/11 HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:36:05] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:42:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:42:43] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:49:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:49:56] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:52:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:52:40] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:57:18] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:57:18] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:57:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 11:57:51] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:04:51] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:04:51] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:05:43] "PATCH /api/email/11 HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:05:49] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:10:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:10:14] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:10:17] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:10:21] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:10:21] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:10:22] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:10:22] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:10:23] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:13:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:13:25] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:13:29] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:13:30] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:13:31] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:13:31] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:13:31] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:25] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:31] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:32] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:32] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:32] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:32] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:33] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:15:33] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:23:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:23:28] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:31:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:31:27] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:32:02] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:32:05] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:32:06] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:32:06] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:32:06] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:32:06] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:32:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Aug/2026 12:32:08] "GET /api/emails HTTP/1.1" 200 -

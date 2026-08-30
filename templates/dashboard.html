@@ -1,0 +1,378 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Webmail Scraper Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+      body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+      body {
+        background: radial-gradient(circle at 10% 20%, rgba(255,240,230,0.6), transparent 10%),
+                    radial-gradient(circle at 90% 80%, rgba(255,235,220,0.6), transparent 12%),
+                    linear-gradient(180deg,#fff7f0 0%, #ffe8d6 100%);
+        min-height: 100vh;
+        padding-top: 24px;
+      }
+      .dashboard-card { background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,248,0.95)); border-radius:12px; box-shadow: 0 10px 30px rgba(60,30,10,0.08); padding:22px; }
+      .table-danger { background: rgba(255,230,230,0.6) !important; }
+      /* Per-priority color classes (applied to tds for reliability) */
+      .priority-additional td { background: rgba(200,255,200,0.55) !important; }
+      .priority-citaitatprccc td { background: rgba(200,220,255,0.6) !important; }
+      .priority-citoffice td { background: rgba(220,240,255,0.7) !important; }
+      .priority-cpcitba td { background: rgba(255,245,200,0.85) !important; }
+      .priority-misc td { background: rgba(250,245,245,0.9) !important; }
+      .priority-row { background: rgba(220,255,220,0.6) !important; }
+      .additional-row { background: rgba(220,230,255,0.6) !important; }
+      .header-bar { display:flex; align-items:center; gap:12px; margin-bottom:12px }
+      .logo-dot { width:40px; height:40px; border-radius:10px; background:linear-gradient(45deg,#ff9966,#ffb89a); box-shadow: 0 6px 18px rgba(170,80,30,0.12) }
+      h3 { margin:0; font-weight:600 }
+    </style>
+  </head>
+  <body class="p-3">
+    <div class="container dashboard-card">
+      <h3>Webmail Dashboard</h3>
+      <p class="text-muted">Shows mails from past 60 days, assigned and status editable.</p>
+      <div class="row mb-3">
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-body p-3">
+              <h5 class="mb-1">Assignment Rules</h5>
+              <div class="small text-muted">as per work allocation order</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body p-3 text-center">
+              <strong>Legend</strong>
+              <div class="mt-2"><span class="badge bg-danger">Overdue</span> &nbsp;<small class="text-muted">Age &gt; 7 days (not completed)</small></div>
+              <div class="ms-2 d-flex gap-2 align-items-center">
+                <button id="toggle-delhi" class="btn btn-sm btn-outline-info">Show Delhi Priority</button>
+                <span class="badge bg-info">Additional</span>
+              </div>
+              <div class="mt-2">
+                <strong>Sender Colors:</strong>
+                <div class="d-flex gap-2 mt-1 align-items-center">
+                  <div class="px-2 py-1 sender-sw" style="background:rgba(200,255,200,0.55); border-radius:6px;">&nbsp;</div>
+                  <small class="text-muted">1 — Additional office (highest)</small>
+                </div>
+                <div class="d-flex gap-2 mt-1 align-items-center">
+                  <div class="px-2 py-1 sender-sw" style="background:rgba(200,220,255,0.6); border-radius:6px;">&nbsp;</div>
+                  <small class="text-muted">2 — CIT (A), ITAT, PrCCC</small>
+                </div>
+                <div class="d-flex gap-2 mt-1 align-items-center">
+                  <div class="px-2 py-1 sender-sw" style="background:rgba(220,240,255,0.7); border-radius:6px;">&nbsp;</div>
+                  <small class="text-muted">3 — CIT Office</small>
+                </div>
+                <div class="d-flex gap-2 mt-1 align-items-center">
+                  <div class="px-2 py-1 sender-sw" style="background:rgba(255,245,200,0.85); border-radius:6px;">&nbsp;</div>
+                  <small class="text-muted">4 — CPC, ITBA, JAO Charges</small>
+                </div>
+                <div class="d-flex gap-2 mt-1 align-items-center">
+                  <div class="px-2 py-1 sender-sw" style="background:rgba(250,245,245,0.9); border-radius:6px;">&nbsp;</div>
+                  <small class="text-muted">5 — Miscellaneous</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mb-2 d-flex align-items-center">
+        <button id="refresh" class="btn btn-sm btn-primary">Refresh</button>
+        <div class="ms-3">
+          <select id="category-filter" class="form-select form-select-sm">
+            <option value="all">All categories</option>
+            <option value="Miscellaneus">Miscellaneus</option>
+            <option value="Additional office">Additional office</option>
+            <option value="PCCIT">PCCIT</option>
+            <option value="On File">On File</option>
+          </select>
+        </div>
+        <div class="ms-2">
+          <button id="toggle-priority-only" class="btn btn-sm btn-outline-success">Show Priority Only</button>
+        </div>
+        <div class="ms-2">
+          <button id="export-priority" class="btn btn-sm btn-secondary">Export Priority CSV</button>
+        </div>
+        <div class="ms-auto">
+          <button id="admin-mode" class="btn btn-sm btn-warning">Enter Admin Mode</button>
+        </div>
+      </div>
+      <div class="mb-1 d-flex align-items-center">
+        <span class="text-muted">Admin edits (category/assignment/priority) require admin password.</span>
+        <div class="ms-3">
+          <div class="card p-2 text-center" style="min-width:160px">
+            <div class="small text-muted">Priority Pending</div>
+            <div id="priority-count" class="h4">0</div>
+          </div>
+        </div>
+        <div class="ms-3">
+          <canvas id="priority-chart" width="200" height="200" style="max-width:220px"></canvas>
+        </div>
+      </div>
+      <table class="table table-striped" id="mail-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Age</th>
+            <th>From</th>
+            <th>Subject</th>
+            <th>Category</th>
+            <th>Assigned To</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="card mt-3">
+        <div class="card-body">
+          <h6 class="mb-2">Activity Log</h6>
+          <div id="assignment-log" style="max-height:200px; overflow:auto; font-size:13px;"></div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Rules editor removed from UI -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+    const officials = ['Vipin','Sunil','Rajeev','Anil','Hemraj','On File'];
+    // server provides `display_class` for each email (via /api/emails)
+
+    function buildAssignOptions(selected){
+      return officials.map(o=>`<option value="${o}" ${o===selected? 'selected':''}>${o}</option>`).join('')
+    }
+
+    async function fetchEmails(){
+      const res = await axios.get('/api/emails')
+      try{ updatePrioritySummary(res.data) }catch(e){}
+      const tbody = document.querySelector('#mail-table tbody')
+      tbody.innerHTML = ''
+      const now = new Date()
+      res.data.forEach(e=>{
+        const date = new Date(e.date || Date.now())
+        const age = Math.floor((now - date)/(1000*60*60*24))
+        const isOverdue = (age>7 && (e.status||'').toLowerCase()!=='completed')
+        const flag = isOverdue ? '<span class="badge bg-danger">Overdue</span>' : ''
+        const row = document.createElement('tr')
+        if(isOverdue) row.classList.add('table-danger')
+        // attach sender for client-side Delhi matching
+        row.dataset.sender = (e.sender||'').toLowerCase()
+        row.innerHTML = `
+          <td>${date.toLocaleString()}</td>
+          <td>${age}d ${flag}</td>
+          <td>${e.sender}</td>
+          <td>${e.subject}</td>
+          <td><input class="form-control form-control-sm cat-input" data-id="${e.id}" value="${e.category||''}" disabled/></td>
+          <td>
+            <select class="form-select form-select-sm assign-select" data-id="${e.id}"></select>
+          </td>
+          <td>
+              ${ e.priority ? '<span class="badge bg-success">Priority</span>' : '' }
+            <div class="form-check form-check-inline ms-2">
+              <input class="form-check-input priority-checkbox" type="checkbox" data-id="${e.id}" ${e.priority? 'checked':''}>
+            </div>
+          </td>
+          <td>
+            <select class="form-select form-select-sm status-select" data-id="${e.id}">
+              <option ${e.status==='Pending'?'selected':''}>Pending</option>
+              <option ${e.status==='In Progress'?'selected':''}>In Progress</option>
+              <option ${e.status==='Completed'?'selected':''}>Completed</option>
+              <option ${e.status==='On File'?'selected':''}>On File</option>
+            </select>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-success save-status" data-id="${e.id}">Save</button>
+          </td>
+        `
+        if(e.priority) row.classList.add('priority-row')
+        if(e.category === 'Additional office') row.classList.add('additional-row')
+        // apply server-calculated display_class if provided
+        if(e.display_class){
+          row.classList.add(e.display_class)
+          // add to each td for reliable background across browsers
+          // note: row.innerHTML has populated td elements
+          row.querySelectorAll('td').forEach(td=>td.classList.add(e.display_class))
+        }
+        // fallback: if no rule matched, leave default styling
+        // disable assign-select by default (admin-only)
+        tbody.appendChild(row)
+        // populate assign-select options (user-editable)
+        const sel = row.querySelector('.assign-select')
+        if(sel){ sel.innerHTML = buildAssignOptions(e.assigned_to||'') ; sel.disabled = false }
+      })
+      attachHandlers()
+    }
+
+    let adminPwd = null
+    let adminMode = false
+
+    document.getElementById('admin-mode').onclick = async ()=>{
+      const pwd = prompt('Enter admin password to enable admin mode:')
+      if(!pwd) return
+      try{
+        await axios.post('/api/check_admin', {pwd: pwd})
+        adminPwd = pwd
+        adminMode = true
+        document.getElementById('admin-mode').textContent = 'Admin Mode: ON'
+        // enable category inputs, assign selects, and show priority checkboxes
+        document.querySelectorAll('.cat-input').forEach(i=>i.disabled=false)
+        document.querySelectorAll('.assign-select').forEach(s=>s.disabled=false)
+        document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='inline-block')
+      }catch(e){
+        alert('Admin password invalid')
+      }
+    }
+
+    document.getElementById('export-priority').onclick = ()=>{
+      window.location = '/export_priority'
+    }
+
+    // Rules editing UI removed from dashboard; server-side rules remain editable via API
+
+    // Chart and priority summary
+    let priorityChart = null
+    function updatePrioritySummary(emails){
+      const now = new Date()
+      const buckets = {"0-3":0, "4-7":0, "8-14":0, "15-30":0, "30+":0}
+      let total = 0
+      emails.forEach(e=>{
+        if(!e.priority) return
+        if((e.status||'').toLowerCase() === 'completed') return
+        total += 1
+        const date = new Date(e.date || Date.now())
+        const age = Math.floor((now - date)/(1000*60*60*24))
+        if(age <= 3) buckets['0-3']++
+        else if(age <=7) buckets['4-7']++
+        else if(age <=14) buckets['8-14']++
+        else if(age <=30) buckets['15-30']++
+        else buckets['30+']++
+      })
+      document.getElementById('priority-count').textContent = total
+      const ctx = document.getElementById('priority-chart').getContext('2d')
+      const labels = ['0-3d','4-7d','8-14d','15-30d','30+d']
+      const data = [buckets['0-3'], buckets['4-7'], buckets['8-14'], buckets['15-30'], buckets['30+']]
+      const colors = ['#66bb6a','#42a5f5','#9fa8da','#ffca28','#e0e0e0']
+      if(priorityChart){ priorityChart.destroy() }
+      priorityChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: data, backgroundColor: colors }] },
+        options: { plugins: { legend: { position: 'bottom', labels: { boxWidth:12 } } }, maintainAspectRatio: false }
+      })
+    }
+
+    document.getElementById('toggle-priority-only').onclick = (ev)=>{
+      const btn = ev.currentTarget
+      const showOnly = btn.dataset.on !== '1'
+      btn.dataset.on = showOnly ? '1' : '0'
+      btn.textContent = showOnly ? 'Show All' : 'Show Priority Only'
+      applyFilters()
+    }
+
+    document.getElementById('toggle-delhi').onclick = (ev)=>{
+      const btn = ev.currentTarget
+      const showOnly = btn.dataset.on !== '1'
+      btn.dataset.on = showOnly ? '1' : '0'
+      btn.textContent = showOnly ? 'Show All' : 'Show Delhi Priority'
+      applyFilters()
+    }
+
+    document.getElementById('category-filter').onchange = applyFilters
+
+    function applyFilters(){
+      const cat = document.getElementById('category-filter').value
+      const priorityOnly = document.getElementById('toggle-priority-only').dataset.on === '1'
+      const delhiOnly = document.getElementById('toggle-delhi').dataset.on === '1'
+      document.querySelectorAll('#mail-table tbody tr').forEach(tr=>{
+        const catInput = tr.querySelector('.cat-input')
+        const hasPriority = tr.classList.contains('priority-row')
+        const rowCat = catInput ? catInput.value : ''
+        let show = true
+        if(cat !== 'all' && rowCat !== cat) show = false
+        if(priorityOnly && !hasPriority) show = false
+        if(delhiOnly){
+          const s = tr.dataset.sender || ''
+          const isDelhi = (s.includes('delhi') && (s.includes('addl') || s.includes('addlcitit') || s.includes('addlci')) )
+          if(!isDelhi) show = false
+        }
+        tr.style.display = show ? '' : 'none'
+      })
+    }
+
+    function attachHandlers(){
+      document.querySelectorAll('.save-status').forEach(btn=>{
+        btn.onclick = async ()=>{
+          const id = btn.dataset.id
+          const status = document.querySelector('.status-select[data-id="'+id+'"]') .value
+          const category = document.querySelector('.cat-input[data-id="'+id+'"]') .value
+            const assigned = document.querySelector('.assign-select[data-id="'+id+'"]') .value
+            const priEl = document.querySelector('.priority-checkbox[data-id="'+id+'"]')
+            const priority = priEl ? (priEl.checked?1:0) : 0
+          // status update (allowed for staff)
+          await axios.patch('/api/email/'+id, {status: status})
+          // assignment update (allowed for any user)
+          await axios.patch('/api/email/'+id, {assigned_to: assigned})
+          // admin edits: category/priority require admin password
+          let pwd = adminPwd
+          if(!pwd){
+            pwd = prompt('Admin password (leave blank to skip admin edits):')
+          }
+          if(pwd){
+            await axios.patch('/api/email/'+id, {admin_action:true, admin_pwd:pwd, category:category, priority:priority})
+          }
+          alert('Saved')
+          fetchEmails()
+        }
+      })
+      // immediate assignment update on select change
+      document.querySelectorAll('.assign-select').forEach(sel=>{
+        sel.onchange = async (ev)=>{
+          const id = sel.dataset.id
+          const val = sel.value
+          try{
+            await axios.patch('/api/email/'+id, {assigned_to: val})
+            fetchEmails()
+            fetchLogs()
+          }catch(e){
+            alert('Failed to update assignment')
+          }
+        }
+      })
+      // priority toggle available to any user
+      document.querySelectorAll('.priority-checkbox').forEach(cb=>{
+        cb.onchange = async ()=>{
+          const id = cb.dataset.id
+          const pri = cb.checked ? 1 : 0
+          try{
+            await axios.post('/api/email/'+id+'/priority', {priority: pri})
+            fetchEmails()
+          }catch(e){
+            alert('Failed to set priority')
+          }
+        }
+      })
+    }
+
+    async function fetchLogs(){
+      try{
+        const res = await axios.get('/api/assignment_logs?limit=50')
+        const container = document.getElementById('assignment-log')
+        container.innerHTML = ''
+        res.data.forEach(l=>{
+          const el = document.createElement('div')
+          el.textContent = `${l.changed_at} — email ${l.email_id}: ${l.old_assigned || 'NULL'} → ${l.new_assigned} (${l.user})`
+          container.appendChild(el)
+        })
+      }catch(e){
+        // ignore
+      }
+    }
+
+    document.getElementById('refresh').onclick = fetchEmails
+    fetchEmails()
+    </script>
+  </body>
+</html>
