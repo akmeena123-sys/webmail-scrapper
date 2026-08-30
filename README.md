@@ -20,13 +20,9 @@ pip install -r requirements.txt
 python -m playwright install
 ```
 
-3. Set environment variables (you can export these in your shell or create a small launch script):
+3. Set environment variables (you can export these in your shell or create a small launch script). Do NOT store real passwords in the repository.
 
-```bash
-export WEBMAIL_USER=jaipur.dcit.int
-export WEBMAIL_PWD='Arvind#2026'
-export WEBMAIL_ADMIN_PWD='change_this_admin_pwd'
-```
+Create a local `.env` file (see `.env.example`) with values for `IMAP_HOST`, `IMAP_USER`, `IMAP_PASSWORD`, and `WEBMAIL_ADMIN_PWD`.
 
 4. Run the app:
 
