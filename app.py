@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from flask import Flask, render_template, jsonify, request, send_file
+from flask import Flask, render_template, jsonify, request, send_file, session
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 import scraper
@@ -11,6 +11,20 @@ APP_DIR = os.path.dirname(__file__)
 DB_PATH = os.path.join(APP_DIR, 'data.db')
 
 ADMIN_PASSWORD = os.environ.get('WEBMAIL_ADMIN_PWD', 'change_this_admin_pwd')
+
+app = Flask(__name__)
+app.secret_key = os.environ.get('WEBMAIL_SECRET') or os.environ.get('SECRET_KEY') or 'change_this_secret_key'
+
+def is_admin_authenticated(pwd=None):
+    # session-based auth preferred
+    try:
+        if session.get('is_admin'):
+            return True
+    except Exception:
+        pass
+    if pwd and pwd == ADMIN_PASSWORD:
+        return True
+    return False
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -27,7 +41,8 @@ def init_db():
         assigned_to TEXT,
         status TEXT,
         priority INTEGER DEFAULT 0,
-        scraped_at TEXT
+        scraped_at TEXT,
+        applied_class TEXT
     )
     ''')
     conn.commit()
@@ -43,7 +58,7 @@ def init_db():
     )
     ''')
     conn.commit()
-    # ensure `priority` column exists for older DBs
+    # ensure `priority` and `applied_class` columns exist for older DBs
     cur2 = conn.cursor()
     cur2.execute("PRAGMA table_info(emails)")
     cols = [r[1] for r in cur2.fetchall()]
@@ -111,11 +126,6 @@ def get_all_emails():
     return items
 
 
-
-
-app = Flask(__name__)
-
-
 @app.route('/api/priority_rules', methods=['GET','POST'])
 def api_priority_rules():
     rules_path = os.path.join(APP_DIR, 'priority_rules.json')
@@ -128,7 +138,7 @@ def api_priority_rules():
     # POST -> update rules (admin only)
     payload = request.json or {}
     pwd = payload.get('admin_pwd')
-    if pwd != ADMIN_PASSWORD:
+    if not is_admin_authenticated(pwd):
         return jsonify({'error':'admin password required'}), 403
     rules = payload.get('rules')
     try:
@@ -230,7 +240,7 @@ def api_priority_rules_preview():
 def api_priority_rules_apply():
     payload = request.json or {}
     pwd = payload.get('admin_pwd')
-    if pwd != ADMIN_PASSWORD:
+    if not is_admin_authenticated(pwd):
         return jsonify({'error':'admin password required'}), 403
     rules = payload.get('rules')
     if not isinstance(rules, list):
@@ -265,9 +275,34 @@ def api_emails():
 def api_check_admin():
     payload = request.json or {}
     pwd = payload.get('pwd')
-    if pwd == ADMIN_PASSWORD:
+    # allow session-based admin or direct pwd
+    if is_admin_authenticated(pwd):
         return jsonify({'ok': True})
     return jsonify({'ok': False}), 403
+
+
+@app.route('/api/login_admin', methods=['POST'])
+def api_login_admin():
+    payload = request.json or {}
+    pwd = payload.get('pwd')
+    if pwd and pwd == ADMIN_PASSWORD:
+        session['is_admin'] = True
+        return jsonify({'ok': True})
+    return jsonify({'ok': False}), 403
+
+
+@app.route('/api/logout_admin', methods=['POST'])
+def api_logout_admin():
+    try:
+        session.pop('is_admin', None)
+    except Exception:
+        pass
+    return jsonify({'ok': True})
+
+
+@app.route('/api/admin_status')
+def api_admin_status():
+    return jsonify({'is_admin': bool(session.get('is_admin'))})
 
 
 @app.route('/export_priority')
@@ -298,7 +333,7 @@ def update_email(eid):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     if admin_action:
-        if pwd != ADMIN_PASSWORD:
+        if not is_admin_authenticated(pwd):
             conn.close()
             return jsonify({'error':'admin password required'}), 403
         # allowed admin fields: category, assigned_to

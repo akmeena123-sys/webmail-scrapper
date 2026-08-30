@@ -97,7 +97,8 @@
           <button id="export-priority" class="btn btn-sm btn-secondary">Export Priority CSV</button>
         </div>
         <div class="ms-auto">
-          <button id="admin-mode" class="btn btn-sm btn-warning">Enter Admin Mode</button>
+          <button id="admin-mode" class="btn btn-sm btn-warning">Admin: Login</button>
+          <button id="admin-logout" class="btn btn-sm btn-outline-secondary ms-2 d-none">Logout</button>
         </div>
       </div>
       <div class="mb-1 d-flex align-items-center">
@@ -135,8 +136,29 @@
         </div>
       </div>
     </div>
+    <!-- Admin login modal -->
+    <div class="modal fade" id="adminModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Admin Login</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-2">Enter admin password to enable editing.</div>
+            <input id="admin-pwd-input" type="password" class="form-control" placeholder="Admin password">
+            <div id="admin-login-error" class="text-danger small mt-2" style="display:none"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button id="admin-login-submit" type="button" class="btn btn-primary">Login</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <!-- Rules editor removed from UI -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
     const officials = ['Vipin','Sunil','Rajeev','Anil','Hemraj','On File'];
@@ -218,45 +240,79 @@
     let adminPwd = null
     let adminMode = false
 
-    document.getElementById('admin-mode').onclick = async ()=>{
-      const pwd = prompt('Enter admin password to enable admin mode:')
-      if(!pwd) return
+    const adminModalEl = document.getElementById('adminModal')
+    const adminModal = new bootstrap.Modal(adminModalEl)
+    function enableAdminUI(){
+      adminMode = true
+      document.getElementById('admin-mode').textContent = 'Admin Mode: ON'
+      document.getElementById('admin-logout').classList.remove('d-none')
+      document.querySelectorAll('.cat-input').forEach(i=>i.disabled=false)
+      document.querySelectorAll('.assign-select').forEach(s=>s.disabled=false)
+      document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='inline-block')
+      document.querySelectorAll('.save-status').forEach(b=>b.disabled=false)
+      try{ sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
+    }
+    function disableAdminUI(){
+      adminMode = false
+      document.getElementById('admin-mode').textContent = 'Admin: Login'
+      document.getElementById('admin-logout').classList.add('d-none')
+      document.querySelectorAll('.cat-input').forEach(i=>i.disabled=true)
+      document.querySelectorAll('.assign-select').forEach(s=>s.disabled=true)
+      document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='none')
+      document.querySelectorAll('.save-status').forEach(b=>b.disabled=true)
+      try{ sessionStorage.removeItem('webmail_admin_mode') }catch(e){}
+    }
+
+    async function ensureAdmin(){
+      if(adminMode) return true
+      // show modal and poll for admin session
+      adminModal.show()
+      const start = Date.now()
+      while(Date.now() - start < 60000){
+        try{
+          const st = await axios.get('/api/admin_status')
+          if(st.data && st.data.is_admin){ enableAdminUI(); adminModal.hide(); return true }
+        }catch(e){}
+        await new Promise(r=>setTimeout(r,500))
+      }
+      return false
+    }
+
+    // initialize admin state from server session
+    (async ()=>{
       try{
-        await axios.post('/api/check_admin', {pwd: pwd})
+        const st = await axios.get('/api/admin_status')
+        if(st.data && st.data.is_admin){ enableAdminUI() }
+        else { disableAdminUI() }
+      }catch(e){ disableAdminUI() }
+    })()
+
+    document.getElementById('admin-mode').onclick = ()=>{
+      // show login modal
+      document.getElementById('admin-pwd-input').value = ''
+      document.getElementById('admin-login-error').style.display = 'none'
+      adminModal.show()
+    }
+
+    document.getElementById('admin-login-submit').onclick = async ()=>{
+      const pwd = document.getElementById('admin-pwd-input').value
+      try{
+        await axios.post('/api/login_admin', {pwd: pwd})
         adminPwd = pwd
-        adminMode = true
-        document.getElementById('admin-mode').textContent = 'Admin Mode: ON'
-        // enable category inputs, assign selects, and show priority checkboxes
-        document.querySelectorAll('.cat-input').forEach(i=>i.disabled=false)
-        document.querySelectorAll('.assign-select').forEach(s=>s.disabled=false)
-        document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='inline-block')
-        document.querySelectorAll('.save-status').forEach(b=>b.disabled=false)
-        // persist admin mode for this tab/session
-        try{ sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
+        enableAdminUI()
+        adminModal.hide()
       }catch(e){
-        alert('Admin password invalid')
+        const err = document.getElementById('admin-login-error')
+        err.textContent = 'Invalid password'
+        err.style.display = 'block'
       }
     }
 
-    // Prompt once on page load to enable admin mode (optional)
-    window.addEventListener('load', async ()=>{
-      try{
-        const was = sessionStorage.getItem('webmail_admin_mode')
-        if(was) {
-          // if previously enabled, ask user to re-enter password to re-enable
-          const pwd = prompt('Re-enter admin password to restore admin mode:')
-          if(pwd){
-            try{ await axios.post('/api/check_admin', {pwd: pwd}); adminPwd=pwd; adminMode=true; document.getElementById('admin-mode').textContent='Admin Mode: ON'; document.querySelectorAll('.cat-input').forEach(i=>i.disabled=false); document.querySelectorAll('.assign-select').forEach(s=>s.disabled=false); document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='inline-block'); document.querySelectorAll('.save-status').forEach(b=>b.disabled=false) }catch(e){}
-          }
-        } else {
-          // ask once optionally to enable edits; leave blank to continue read-only
-          const pwd = prompt('Enter admin password to enable editing (leave blank for read-only):')
-          if(pwd){
-            try{ await axios.post('/api/check_admin', {pwd: pwd}); adminPwd=pwd; adminMode=true; document.getElementById('admin-mode').textContent='Admin Mode: ON'; document.querySelectorAll('.cat-input').forEach(i=>i.disabled=false); document.querySelectorAll('.assign-select').forEach(s=>s.disabled=false); document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='inline-block'); document.querySelectorAll('.save-status').forEach(b=>b.disabled=false); sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
-          }
-        }
-      }catch(e){}
-    })
+    document.getElementById('admin-logout').onclick = async ()=>{
+      try{ await axios.post('/api/logout_admin') }catch(e){}
+      adminPwd = null
+      disableAdminUI()
+    }
 
     document.getElementById('export-priority').onclick = ()=>{
       window.location = '/export_priority'
@@ -344,15 +400,12 @@
             const priority = priEl ? (priEl.checked?1:0) : 0
           // status update (allowed for staff)
           await axios.patch('/api/email/'+id, {status: status})
-          // assignment update (allowed for any user)
-          await axios.patch('/api/email/'+id, {assigned_to: assigned})
-          // admin edits: category/priority require admin password
-          let pwd = adminPwd
-          if(!pwd){
-            pwd = prompt('Admin password (leave blank to skip admin edits):')
-          }
-          if(pwd){
-            await axios.patch('/api/email/'+id, {admin_action:true, admin_pwd:pwd, category:category, priority:priority})
+          // for assignment/category/priority we require admin session
+          const ok = await ensureAdmin()
+          if(ok){
+            try{
+              await axios.patch('/api/email/'+id, {admin_action:true, category:category, assigned_to: assigned, priority:priority})
+            }catch(e){ /* ignore */ }
           }
           alert('Saved')
           fetchEmails()
@@ -363,12 +416,10 @@
         sel.onchange = async (ev)=>{
           const id = sel.dataset.id
           const val = sel.value
-          let pwd = adminPwd
-          if(!pwd) pwd = prompt('Admin password required to change assignment:')
-          if(!pwd){ fetchEmails(); return }
           try{
-            await axios.patch('/api/email/'+id, {admin_action:true, admin_pwd: pwd, assigned_to: val})
-            adminPwd = pwd
+            const ok = await ensureAdmin()
+            if(!ok){ fetchEmails(); return }
+            await axios.patch('/api/email/'+id, {admin_action:true, assigned_to: val})
             try{ sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
             fetchEmails()
             fetchLogs()
@@ -383,12 +434,10 @@
         cb.onchange = async ()=>{
           const id = cb.dataset.id
           const pri = cb.checked ? 1 : 0
-          let pwd = adminPwd
-          if(!pwd) pwd = prompt('Admin password required to change priority:')
-          if(!pwd){ fetchEmails(); return }
           try{
-            await axios.patch('/api/email/'+id, {admin_action:true, admin_pwd: pwd, priority: pri})
-            adminPwd = pwd
+            const ok = await ensureAdmin()
+            if(!ok){ fetchEmails(); return }
+            await axios.patch('/api/email/'+id, {admin_action:true, priority: pri})
             try{ sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
             fetchEmails()
           }catch(e){
