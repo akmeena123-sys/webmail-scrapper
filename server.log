@@ -1,0 +1,20 @@
+ * Tip: There are .env or .flaskenv files present. Do "pip install python-dotenv" to use them.
+Starting Flask server on http://0.0.0.0:8080
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.1.7:8080
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [30/Aug/2026 11:38:57] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 11:39:13] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 11:39:13] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 12:05:50] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 12:05:50] "GET /api/emails HTTP/1.1" 200 -
+127.0.0.1 - - [30/Aug/2026 12:06:07] "[31m[1mPOST /api/check_admin HTTP/1.1[0m" 403 -
+127.0.0.1 - - [30/Aug/2026 12:06:16] "[31m[1mPOST /api/check_admin HTTP/1.1[0m" 403 -
+127.0.0.1 - - [30/Aug/2026 12:06:25] "[31m[1mPOST /api/check_admin HTTP/1.1[0m" 403 -
+127.0.0.1 - - [30/Aug/2026 12:06:36] "[31m[1mPOST /api/check_admin HTTP/1.1[0m" 403 -
+127.0.0.1 - - [30/Aug/2026 12:06:44] "[31m[1mPOST /api/check_admin HTTP/1.1[0m" 403 -
+127.0.0.1 - - [30/Aug/2026 12:06:50] "[31m[1mPOST /api/check_admin HTTP/1.1[0m" 403 -
