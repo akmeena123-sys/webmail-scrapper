@@ -198,11 +198,19 @@
           row.querySelectorAll('td').forEach(td=>td.classList.add(e.display_class))
         }
         // fallback: if no rule matched, leave default styling
-        // disable assign-select by default (admin-only)
+        // disable edit controls by default (admin-only)
         tbody.appendChild(row)
-        // populate assign-select options (user-editable)
+        // populate assign-select options (admin-only)
         const sel = row.querySelector('.assign-select')
-        if(sel){ sel.innerHTML = buildAssignOptions(e.assigned_to||'') ; sel.disabled = false }
+        if(sel){ sel.innerHTML = buildAssignOptions(e.assigned_to||'') ; sel.disabled = true }
+        // disable category input and save button until admin
+        const cat = row.querySelector('.cat-input')
+        if(cat) cat.disabled = true
+        const saveBtn = row.querySelector('.save-status')
+        if(saveBtn) saveBtn.disabled = true
+        // hide/disable priority checkbox until admin mode
+        const priCb = row.querySelector('.priority-checkbox')
+        if(priCb){ priCb.disabled = true; priCb.closest('.form-check-inline')?.style && (priCb.closest('.form-check-inline').style.display='none') }
       })
       attachHandlers()
     }
@@ -222,10 +230,33 @@
         document.querySelectorAll('.cat-input').forEach(i=>i.disabled=false)
         document.querySelectorAll('.assign-select').forEach(s=>s.disabled=false)
         document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='inline-block')
+        document.querySelectorAll('.save-status').forEach(b=>b.disabled=false)
+        // persist admin mode for this tab/session
+        try{ sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
       }catch(e){
         alert('Admin password invalid')
       }
     }
+
+    // Prompt once on page load to enable admin mode (optional)
+    window.addEventListener('load', async ()=>{
+      try{
+        const was = sessionStorage.getItem('webmail_admin_mode')
+        if(was) {
+          // if previously enabled, ask user to re-enter password to re-enable
+          const pwd = prompt('Re-enter admin password to restore admin mode:')
+          if(pwd){
+            try{ await axios.post('/api/check_admin', {pwd: pwd}); adminPwd=pwd; adminMode=true; document.getElementById('admin-mode').textContent='Admin Mode: ON'; document.querySelectorAll('.cat-input').forEach(i=>i.disabled=false); document.querySelectorAll('.assign-select').forEach(s=>s.disabled=false); document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='inline-block'); document.querySelectorAll('.save-status').forEach(b=>b.disabled=false) }catch(e){}
+          }
+        } else {
+          // ask once optionally to enable edits; leave blank to continue read-only
+          const pwd = prompt('Enter admin password to enable editing (leave blank for read-only):')
+          if(pwd){
+            try{ await axios.post('/api/check_admin', {pwd: pwd}); adminPwd=pwd; adminMode=true; document.getElementById('admin-mode').textContent='Admin Mode: ON'; document.querySelectorAll('.cat-input').forEach(i=>i.disabled=false); document.querySelectorAll('.assign-select').forEach(s=>s.disabled=false); document.querySelectorAll('.form-check-inline').forEach(d=>d.style.display='inline-block'); document.querySelectorAll('.save-status').forEach(b=>b.disabled=false); sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
+          }
+        }
+      }catch(e){}
+    })
 
     document.getElementById('export-priority').onclick = ()=>{
       window.location = '/export_priority'
@@ -327,30 +358,42 @@
           fetchEmails()
         }
       })
-      // immediate assignment update on select change
+      // immediate assignment update on select change (admin only)
       document.querySelectorAll('.assign-select').forEach(sel=>{
         sel.onchange = async (ev)=>{
           const id = sel.dataset.id
           const val = sel.value
+          let pwd = adminPwd
+          if(!pwd) pwd = prompt('Admin password required to change assignment:')
+          if(!pwd){ fetchEmails(); return }
           try{
-            await axios.patch('/api/email/'+id, {assigned_to: val})
+            await axios.patch('/api/email/'+id, {admin_action:true, admin_pwd: pwd, assigned_to: val})
+            adminPwd = pwd
+            try{ sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
             fetchEmails()
             fetchLogs()
           }catch(e){
-            alert('Failed to update assignment')
+            alert('Failed to update assignment: '+(e?.response?.data?.error || e.message))
+            fetchEmails()
           }
         }
       })
-      // priority toggle available to any user
+      // priority toggle (admin only)
       document.querySelectorAll('.priority-checkbox').forEach(cb=>{
         cb.onchange = async ()=>{
           const id = cb.dataset.id
           const pri = cb.checked ? 1 : 0
+          let pwd = adminPwd
+          if(!pwd) pwd = prompt('Admin password required to change priority:')
+          if(!pwd){ fetchEmails(); return }
           try{
-            await axios.post('/api/email/'+id+'/priority', {priority: pri})
+            await axios.patch('/api/email/'+id, {admin_action:true, admin_pwd: pwd, priority: pri})
+            adminPwd = pwd
+            try{ sessionStorage.setItem('webmail_admin_mode','1') }catch(e){}
             fetchEmails()
           }catch(e){
-            alert('Failed to set priority')
+            alert('Failed to set priority: '+(e?.response?.data?.error || e.message))
+            fetchEmails()
           }
         }
       })
