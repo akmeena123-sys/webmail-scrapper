@@ -14,6 +14,24 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Docker (recommended for hosting)
+
+Build and run locally with Docker:
+
+```bash
+docker build -t webmail-scrapper:latest .
+docker run -p 8080:8080 --env-file .env webmail-scrapper:latest
+# open http://127.0.0.1:8080
+```
+
+### Auto-build via GitHub Actions + GHCR
+
+This repository includes a workflow that builds a container image and pushes it to GitHub Container Registry (`ghcr.io/<owner>/webmail-scrapper`) on each push to `main`.
+
+You can deploy the pushed image to a host (Render, Railway, DigitalOcean, etc.) or connect this repository directly in Render and enable auto-deploys for a managed URL.
+
+Recommended quick host: Render.com — connect the GitHub repository and create a new Web Service, or create a new service from a Docker image and point to `ghcr.io/<owner>/webmail-scrapper:latest`.
+
 2. Install Playwright browsers:
 
 ```bash
